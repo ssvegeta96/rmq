@@ -21,6 +21,9 @@ vhost = 'VHOST_NAME'
 payload = {"value":{"src-protocol":"amqp091","src-uri":f"amqp://{username}:{password}@{RMQ1}/{vhost}","src-queue":f"{queue_name}","dest-protocol":"amqp091","dest-uri":f"amqp://{username}:{password}@{RMQ2}/{vhost}","dest-queue":f"{queue_name}"}}
 
 formated_date = datetime.now().strftime("%Y_%m_%d_%H_%M")
+
+######for csv report, can be skipped and call the json response from queue api call and iterate over that and not worry about files
+
 NEWR =f'{REPO}/queue_report_{formated_date}.csv'
 
 with open(f'{REPO}/queue_report_{formated_date}.csv', 'a', encoding='utf8', newline='') as output_file:
@@ -42,9 +45,9 @@ with open(f'{NEWR}','r') as muh:
         #HAS NEWER ARGUMENTS e.g auto delete
         payload = {"value":{"src-protocol":"amqp091","src-uri":f"amqp://{username}:{password}@{RMQ1}/{vhost}","src-queue":f"{queue_name}","dest-protocol":"amqp091","dest-uri":f"amqp://{username}:{password}@{RMQ2}/{vhost}","dest-queue":f"{queue_name}","ack-mode": "on-confirm", "src-delete-after": "queue-length"}}
         
-        #continue
+        ### the first if checks if there are messsages ready, then does pattern matching for your chouse
         if int(i[0]) > 0:
-            if not re.match(r'^P5|COPY', i[1]):
+            if not re.match(r'^PATTERN1|PATERN2', i[1]):
                get_msg_rdy = requests.get(f'http://{RMQ1}:15672/api/queues/{vhost}/{queue_name}',auth=(username,password)).json()
                msg_rdy= get_msg_rdy['messages_ready']
                shovel = requests.put(f'http://{RMQ1}:15672/api/parameters/shovel/{vhost}/{queue_name}',json=payload,auth=(username,password),headers=headers)
