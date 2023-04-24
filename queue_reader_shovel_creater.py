@@ -8,22 +8,19 @@ import sys
 
 # Set the RabbitMQ API endpoint
 RMQ1 = "192.168.1.111"
-RMQ2 = "192.168.1.112"
+RMQ2 = "192.168.1.222"
 
 REPO = '/home/test/pyapp/gui/test'
 # Set the RabbitMQ credentials
 username = "admin"
 password = "password"
 
-queue_name = 'QUEUE_NAME'
-vhost = 'VHOST_NAME'
-#BASIC AND WORKS WITH OLD RMQ VERIONS
+queue_name = 'copy'
+vhost = 'VHOST'
+
 payload = {"value":{"src-protocol":"amqp091","src-uri":f"amqp://{username}:{password}@{RMQ1}/{vhost}","src-queue":f"{queue_name}","dest-protocol":"amqp091","dest-uri":f"amqp://{username}:{password}@{RMQ2}/{vhost}","dest-queue":f"{queue_name}"}}
 
 formated_date = datetime.now().strftime("%Y_%m_%d_%H_%M")
-
-######for csv report, can be skipped and call the json response from queue api call and iterate over that and not worry about files
-
 NEWR =f'{REPO}/queue_report_{formated_date}.csv'
 
 with open(f'{REPO}/queue_report_{formated_date}.csv', 'a', encoding='utf8', newline='') as output_file:
@@ -42,16 +39,25 @@ with open(f'{NEWR}','r') as muh:
         vhost = i[2]
         #print(row)
         headers = {"Content-Type": "application/json"}
-        #HAS NEWER ARGUMENTS e.g auto delete
+        #remove src delete after for old RMQ servers
         payload = {"value":{"src-protocol":"amqp091","src-uri":f"amqp://{username}:{password}@{RMQ1}/{vhost}","src-queue":f"{queue_name}","dest-protocol":"amqp091","dest-uri":f"amqp://{username}:{password}@{RMQ2}/{vhost}","dest-queue":f"{queue_name}","ack-mode": "on-confirm", "src-delete-after": "queue-length"}}
         
-        ### the first if checks if there are messsages ready, then does pattern matching for your chouse
+        #continue
         if int(i[0]) > 0:
-            if not re.match(r'^PATTERN1|PATERN2', i[1]):
+            if not re.match(r'^PATTERN1|PATTERN2', i[1]):
                get_msg_rdy = requests.get(f'http://{RMQ1}:15672/api/queues/{vhost}/{queue_name}',auth=(username,password)).json()
                msg_rdy= get_msg_rdy['messages_ready']
-               shovel = requests.put(f'http://{RMQ1}:15672/api/parameters/shovel/{vhost}/{queue_name}',json=payload,auth=(username,password),headers=headers)
-
-               print(i[1],'in', i[2],f' had {msg_rdy} messages moved: Sucess Code: {shovel.status_code}')
+               user_input = None
+               while not user_input:
+                user_input = input(f"{queue_name} has {msg_rdy} in {vhost} continue y/n? ")
+                if user_input == 'y':
+                    shovel = requests.put(f'http://{RMQ1}:15672/api/parameters/shovel/{vhost}/{queue_name}',json=payload,auth=(username,password),headers=headers)
+                    print(i[1],'in', i[2],f' had {msg_rdy} messages moved: Sucess Code: {shovel.status_code}\n')
+                
+                elif user_input == 'n':
+                        print(f"{queue_name} in {vhost} skipped")
+                        loop_val = False
+                else:
+                    print('y/n only')
             else:
-                print(i[1],'not shoveld')
+                print(i[1],'in', i[2],'not shoveled')
