@@ -44,19 +44,21 @@ with open(f'{NEWR}','r') as muh:
         
         #continue
         if int(i[0]) > 0:
-            if not re.match(r'^PATTERN1|PATTERN2', i[1]):
+            pattern = re.compile(r'^PATTERN2|PATTERN')
+            muh = re.search(pattern,i[1])
+            if muh:
                get_msg_rdy = requests.get(f'http://{RMQ1}:15672/api/queues/{vhost}/{queue_name}',auth=(username,password)).json()
                msg_rdy= get_msg_rdy['messages_ready']
-               user_input = None
-               while not user_input:
+               
+               while True:
                 user_input = input(f"{queue_name} has {msg_rdy} in {vhost} continue y/n? ")
                 if user_input == 'y':
                     shovel = requests.put(f'http://{RMQ1}:15672/api/parameters/shovel/{vhost}/{queue_name}',json=payload,auth=(username,password),headers=headers)
                     print(i[1],'in', i[2],f' had {msg_rdy} messages moved: Sucess Code: {shovel.status_code}\n')
-                
+                    break
                 elif user_input == 'n':
-                        print(f"{queue_name} in {vhost} skipped")
-                        loop_val = False
+                     print(f"{queue_name} in {vhost} skipped")
+                     break
                 else:
                     print('y/n only')
             else:
