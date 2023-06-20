@@ -1,0 +1,3 @@
+#run the following command anywhere jq util binary is isntalled to turn classic quues to quoerom quues from the definitons export json file
+
+jq '.queues[].type = "quorum" | .queues[].arguments = {"x-queue-type": "quorum"}' old_definitions.json > new_definitions.json
