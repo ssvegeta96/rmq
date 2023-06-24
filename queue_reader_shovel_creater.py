@@ -12,6 +12,12 @@ RMQ2 = "192.168.1.222"
 
 REPO = '/home/test/pyapp/gui/test'
 # Set the RabbitMQ credentials
+'''
+alaternativly you call for user intput here to avoid sotring passwod in scripts
+
+uname = input('username: ')
+and getpass.getpass for the password to store it securly after taking the users reponse
+'''
 username = "admin"
 password = "password"
 
@@ -48,14 +54,15 @@ with open(f'{NEWR}','r') as muh:
             muh = re.search(pattern,i[1])
             if muh:
                get_msg_rdy = requests.get(f'http://{RMQ1}:15672/api/queues/{vhost}/{queue_name}',auth=(username,password)).json()
-               msg_rdy= get_msg_rdy['messages_ready']
+               msg_rdy = get_msg_rdy['messages_ready']
                
                while True:
                 user_input = input(f"{queue_name} has {msg_rdy} in {vhost} continue y/n? ")
                 if user_input == 'y':
                     shovel = requests.put(f'http://{RMQ1}:15672/api/parameters/shovel/{vhost}/{queue_name}',json=payload,auth=(username,password),headers=headers)
-                    print(i[1],'in', i[2],f' had {msg_rdy} messages moved: Sucess Code: {shovel.status_code}\n')
-                    break
+                    if shovel.success_code in [ 204 ,201 ]:
+                        print(i[1],'in', i[2],f' had {msg_rdy} messages moved: Sucess Code: {shovel.status_code}\n')
+                        break
                 elif user_input == 'n':
                      print(f"{queue_name} in {vhost} skipped")
                      break
