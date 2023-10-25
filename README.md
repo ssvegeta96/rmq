@@ -14,3 +14,5 @@ https://ldapwiki.com/wiki/LDAP%20Query%20Basic%20Examples
 
 ###a detailed conversation for Quorom Queues VS Classc queues with emphasis on performanace and use case
 https://rabbitmq.slack.com/archives/C1EDN83PA/p1616073433092100
+![image](https://github.com/ssvegeta96/rmq/assets/9201991/cb1b4331-ae04-4075-b990-e078eee40027)
+
